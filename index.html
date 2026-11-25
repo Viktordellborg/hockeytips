@@ -15,6 +15,8 @@
     #matcher ul { list-style: none; margin: 0; padding: 0; }
     #matcher li { display: flex; gap: 1rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid #dde3e9; }
     #matcher .tid { font-variant-numeric: tabular-nums; color: #5b6b7a; }
+    #matcher .form { color: #5b6b7a; font-size: 0.85rem; }
+    #matcher .tips { margin-left: auto; text-align: right; font-weight: bold; }
     tbody tr:hover { background: #f1f5f9; }
   </style>
 </head>
@@ -23,6 +25,8 @@
 
   <h2>Kommande matcher</h2>
   <p id="matchstatus">Hämtar matcherna …</p>
+  <p>Tipset är laget med flest poäng på sina 5 senaste matcher (V = 2, Ö = 1, F = 0).
+     Vid lika väljs laget med högst andel av möjliga poäng i tabellen, annars hemmalaget. Bara för skojs skull.</p>
   <div id="matcher"></div>
 
   <h2>Tabellen</h2>
@@ -57,7 +61,14 @@
     async function visaMatcher() {
       const status = document.getElementById("matchstatus");
       try {
-        const data = await hamtaJson("data/schedule.json");
+        // Promise.all: hämta tre filer samtidigt och vänta tills alla är klara.
+        const [data, form, tabell] = await Promise.all([
+          hamtaJson("data/schedule.json"),
+          hamtaJson("data/form.json"),
+          hamtaJson("data/standings.json"),
+        ]);
+        // Map: som Dictionary i C# eller HashMap i Java. Förkortning -> andel av möjliga poäng.
+        const andelar = new Map(tabell.standings.map(l => [l.teamAbbrev.default, l.pointPctg]));
 
         // flatMap: slå ihop dagarnas listor till en. filter: behåll bara matcher som inte har börjat.
         const matcher = data.gameWeek
@@ -85,8 +96,18 @@
           tid.textContent = start.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
           const lag = document.createElement("span");
           lag.textContent = lagnamn(match.homeTeam) + " – " + lagnamn(match.awayTeam);
+          const formrad = document.createElement("div");
+          formrad.className = "form";
+          formrad.textContent = "Form: " + formtext(form, match.homeTeam) + " – " + formtext(form, match.awayTeam);
+          const mitten = document.createElement("div");
+          mitten.append(lag, formrad);
+
+          const tips = document.createElement("span");
+          tips.className = "tips";
+          tips.textContent = "Tips: " + valjTips(match, form, andelar).commonName.default;
+
           const rad = document.createElement("li");
-          rad.append(tid, lag);
+          rad.append(tid, mitten, tips);
           lista.append(rad);
         }
 
@@ -97,6 +118,26 @@
         console.error(fel);
         status.textContent = "Kunde inte läsa matcherna.";
       }
+    }
+
+    // Poäng på de 5 senaste matcherna: 2 för V, 1 för Ö, 0 för F.
+    function formpoang(form, lag) {
+      const poang = { V: 2, "Ö": 1, F: 0 };
+      return (form[lag.abbrev] ?? []).reduce((summa, r) => summa + poang[r], 0);
+    }
+
+    function formtext(form, lag) {
+      return (form[lag.abbrev] ?? []).join("") + " (" + formpoang(form, lag) + ")";
+    }
+
+    function valjTips(match, form, andelar) {
+      const hemma = formpoang(form, match.homeTeam);
+      const borta = formpoang(form, match.awayTeam);
+      if (hemma !== borta) return hemma > borta ? match.homeTeam : match.awayTeam;
+
+      const hemmaAndel = andelar.get(match.homeTeam.abbrev) ?? 0;
+      const bortaAndel = andelar.get(match.awayTeam.abbrev) ?? 0;
+      return bortaAndel > hemmaAndel ? match.awayTeam : match.homeTeam;
     }
 
     function lagnamn(lag) {
