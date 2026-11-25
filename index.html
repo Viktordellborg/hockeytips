@@ -5,28 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hockeytips</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; color: #1b2733; }
-    .scroll { overflow-x: auto; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { padding: 0.4rem 0.6rem; text-align: right; border-bottom: 1px solid #dde3e9; white-space: nowrap; }
+    /* Färger som variabler. Mörkt läge byter bara värdena. */
+    :root {
+      color-scheme: light dark;
+      --is: #eaf2f7; --yta: #ffffff; --text: #10243a; --dov: #506479;
+      --linje: #cddbe6; --bla: #1450a0; --rod: #c4182f; --vinst: #1450a0; --vinsttext: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --is: #0e1d2e; --yta: #16293d; --text: #e6eff7; --dov: #9db2c6;
+        --linje: #2c435a; --bla: #7db4f5; --rod: #ff7384; --vinst: #7db4f5; --vinsttext: #0e1d2e;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--is); color: var(--text); font: 1rem/1.45 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
+    header, main { max-width: 60rem; margin: 0 auto; padding: 0 1rem; }
+    header { padding-top: 2rem; }
+    h1 { margin: 0; font-size: clamp(2.4rem, 9vw, 4.5rem); line-height: 1; font-weight: 800; letter-spacing: -0.03em; }
+    h2 { margin: 2.5rem 0 0.3rem; font-size: 1.5rem; }
+    p { margin: 0.3rem 0; max-width: 65ch; color: var(--dov); }
+
+    /* Rinken sedd uppifrån: blålinjer, röd mittlinje och mittcirkel. */
+    .rink { display: block; width: 100%; height: 5.5rem; margin-top: 1rem; border: 2px solid var(--linje); border-radius: 2.75rem; background: var(--yta); }
+
+    #matcher details { margin-top: 0.8rem; }
+    summary { padding: 0.6rem 0; cursor: pointer; font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid var(--linje); }
+    summary::first-letter { text-transform: uppercase; }
+    summary .antal { font-weight: 400; color: var(--dov); }
+    summary:focus-visible { outline: 3px solid var(--bla); outline-offset: 2px; }
+    #matcher ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 25rem), 1fr)); column-gap: 2.5rem; }
+    #matcher li { display: flex; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--linje); }
+    .tid { width: 3rem; color: var(--dov); font-variant-numeric: tabular-nums; }
+    .lagen { flex: 1; min-width: 0; }
+    .lag { display: flex; align-items: center; gap: 0.5rem; padding: 0.15rem 0 0.15rem 0.6rem; border-left: 3px solid transparent; }
+    .lag.vald { border-left-color: var(--rod); font-weight: 700; }
+    .namn { flex: 1; min-width: 0; }
+    .vald .namn::after { content: " Tips"; color: var(--rod); font-size: 0.85rem; }
+
+    /* En puck per resultat. */
+    .form { display: flex; gap: 0.2rem; }
+    .puck { width: 1.3rem; height: 1.3rem; border-radius: 50%; display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; border: 1.5px solid var(--linje); color: var(--dov); }
+    .puck.V { background: var(--vinst); border-color: var(--vinst); color: var(--vinsttext); }
+    .puck.O { border-color: var(--vinst); color: var(--bla); }
+
+    .scroll { overflow-x: auto; margin: 0.8rem 0 3rem; background: var(--yta); border-radius: 0.75rem; }
+    table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+    th, td { padding: 0.5rem 0.7rem; text-align: right; border-bottom: 1px solid var(--linje); white-space: nowrap; }
+    th { color: var(--dov); font-size: 0.85rem; }
+    tbody tr:last-child td { border-bottom: 0; }
     th:nth-child(2), td:nth-child(2) { text-align: left; }
-    td:last-child { font-weight: bold; }
-    #matcher h3 { margin: 1.2rem 0 0.3rem; }
-    #matcher ul { list-style: none; margin: 0; padding: 0; }
-    #matcher li { display: flex; gap: 1rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid #dde3e9; }
-    #matcher .tid { font-variant-numeric: tabular-nums; color: #5b6b7a; }
-    #matcher .form { color: #5b6b7a; font-size: 0.85rem; }
-    #matcher .tips { margin-left: auto; text-align: right; font-weight: bold; }
-    tbody tr:hover { background: #f1f5f9; }
+    td:last-child { font-weight: 700; }
+    .kort { display: none; }
+
+    /* Mobil: lagets förkortning i tabellen och färre kolumner. */
+    @media (max-width: 40rem) {
+      .langt { display: none; }
+      .kort { display: inline; }
+      th:nth-child(8), td:nth-child(8) { display: none; }
+      th, td { padding: 0.5rem 0.4rem; }
+      header { padding-top: 1.2rem; }
+      .rink { height: 4rem; border-radius: 2rem; }
+      #matcher li { gap: 0.4rem; }
+    }
   </style>
 </head>
 <body>
-  <h1>Hockeytips</h1>
+  <header>
+    <h1>Hockeytips</h1>
+    <svg class="rink" viewBox="0 0 800 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke-width="4">
+        <path d="M290 0V100M510 0V100" stroke="var(--bla)"/>
+        <path d="M400 0V100" stroke="var(--rod)"/>
+        <circle cx="400" cy="50" r="30" stroke="var(--bla)"/>
+      </g>
+      <circle cx="400" cy="50" r="6" fill="var(--text)"/>
+    </svg>
+  </header>
 
+  <main>
   <h2>Kommande matcher</h2>
   <p id="matchstatus">Hämtar matcherna …</p>
-  <p>Tipset är laget med flest poäng på sina 5 senaste matcher (V = 2, Ö = 1, F = 0).
-     Vid lika väljs laget med högst andel av möjliga poäng i tabellen, annars hemmalaget. Bara för skojs skull.</p>
+  <p>Vi tippar på laget med flest poäng på sina 5 senaste matcher: vinst (V) ger 2, förlust efter förlängning eller straffar (Ö) ger 1 och förlust (F) ger 0.
+     Vid lika avgör tabellen, sedan hemmaplan. Den senaste matchen står längst till höger. Bara för skojs skull.</p>
   <div id="matcher"></div>
 
   <h2>Tabellen</h2>
@@ -49,6 +109,7 @@
       <tbody id="tabell"></tbody>
     </table>
   </div>
+  </main>
 
   <script>
     // Hämtar en JSON-fil och gör om den till ett objekt. Används av båda funktionerna nedan.
@@ -79,36 +140,35 @@
         const yta = document.getElementById("matcher");
         let senasteDag = "";
         let lista;
+        let antal;
         for (const match of matcher) {
           // Tiden är i UTC i filen. Webbläsaren räknar om den till besökarens tidszon.
           const start = new Date(match.startTimeUTC);
           const dag = start.toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" });
           if (dag !== senasteDag) {
-            const rubrik = document.createElement("h3");
-            rubrik.textContent = dag;
+            // details/summary: inbyggd HTML för något som går att fälla ut. Första dagen är öppen.
+            const grupp = document.createElement("details");
+            grupp.open = senasteDag === "";
+            const rubrik = document.createElement("summary");
+            antal = nyttElement("span", "antal", "");
+            rubrik.append(dag + " ", antal);
             lista = document.createElement("ul");
-            yta.append(rubrik, lista);
+            grupp.append(rubrik, lista);
+            yta.append(grupp);
             senasteDag = dag;
           }
 
-          const tid = document.createElement("span");
-          tid.className = "tid";
-          tid.textContent = start.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
-          const lag = document.createElement("span");
-          lag.textContent = lagnamn(match.homeTeam) + " – " + lagnamn(match.awayTeam);
-          const formrad = document.createElement("div");
-          formrad.className = "form";
-          formrad.textContent = "Form: " + formtext(form, match.homeTeam) + " – " + formtext(form, match.awayTeam);
-          const mitten = document.createElement("div");
-          mitten.append(lag, formrad);
-
-          const tips = document.createElement("span");
-          tips.className = "tips";
-          tips.textContent = "Tips: " + valjTips(match, form, andelar).commonName.default;
+          const klocka = start.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+          const tippat = valjTips(match, form, andelar);
+          const lagen = nyttElement("div", "lagen", "");
+          for (const lag of [match.homeTeam, match.awayTeam]) {
+            lagen.append(lagrad(lag, form, lag === tippat));
+          }
 
           const rad = document.createElement("li");
-          rad.append(tid, mitten, tips);
+          rad.append(nyttElement("span", "tid", klocka), lagen);
           lista.append(rad);
+          antal.textContent = "(" + lista.children.length + ")";
         }
 
         status.textContent = matcher.length > 0
@@ -126,8 +186,23 @@
       return (form[lag.abbrev] ?? []).reduce((summa, r) => summa + poang[r], 0);
     }
 
-    function formtext(form, lag) {
-      return (form[lag.abbrev] ?? []).join("") + " (" + formpoang(form, lag) + ")";
+    function nyttElement(typ, klass, text) {
+      const element = document.createElement(typ);
+      element.className = klass;
+      element.textContent = text;
+      return element;
+    }
+
+    // En rad med lagets namn och en puck per resultat.
+    function lagrad(lag, form, vald) {
+      const rad = nyttElement("div", vald ? "lag vald" : "lag", "");
+      const puckar = nyttElement("span", "form", "");
+      const resultat = form[lag.abbrev] ?? [];
+      puckar.setAttribute("role", "img");
+      puckar.setAttribute("aria-label", "Form: " + resultat.join(" "));
+      for (const r of resultat) puckar.append(nyttElement("span", "puck " + (r === "Ö" ? "O" : r), r));
+      rad.append(nyttElement("span", "namn", lagnamn(lag)), puckar);
+      return rad;
     }
 
     function valjTips(match, form, andelar) {
@@ -167,6 +242,12 @@
             lag.points,
           ];
           for (const varde of varden) rad.insertCell().textContent = varde;
+
+          // Visa förkortningen på mobil och hela namnet på större skärmar (styrs i CSS).
+          rad.cells[1].replaceChildren(
+            nyttElement("span", "langt", lag.teamName.default),
+            nyttElement("span", "kort", lag.teamAbbrev.default),
+          );
         }
 
         const tid = new Date(data.standingsDateTimeUtc).toLocaleString("sv-SE");
