@@ -11,11 +11,21 @@
     th, td { padding: 0.4rem 0.6rem; text-align: right; border-bottom: 1px solid #dde3e9; white-space: nowrap; }
     th:nth-child(2), td:nth-child(2) { text-align: left; }
     td:last-child { font-weight: bold; }
+    #matcher h3 { margin: 1.2rem 0 0.3rem; }
+    #matcher ul { list-style: none; margin: 0; padding: 0; }
+    #matcher li { display: flex; gap: 1rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid #dde3e9; }
+    #matcher .tid { font-variant-numeric: tabular-nums; color: #5b6b7a; }
     tbody tr:hover { background: #f1f5f9; }
   </style>
 </head>
 <body>
   <h1>Hockeytips</h1>
+
+  <h2>Kommande matcher</h2>
+  <p id="matchstatus">Hämtar matcherna …</p>
+  <div id="matcher"></div>
+
+  <h2>Tabellen</h2>
   <p id="status">Hämtar tabellen …</p>
   <div class="scroll">
     <table>
@@ -37,15 +47,68 @@
   </div>
 
   <script>
+    // Hämtar en JSON-fil och gör om den till ett objekt. Används av båda funktionerna nedan.
+    async function hamtaJson(adress) {
+      const svar = await fetch(adress);
+      if (!svar.ok) throw new Error("HTTP " + svar.status);
+      return svar.json();
+    }
+
+    async function visaMatcher() {
+      const status = document.getElementById("matchstatus");
+      try {
+        const data = await hamtaJson("data/schedule.json");
+
+        // flatMap: slå ihop dagarnas listor till en. filter: behåll bara matcher som inte har börjat.
+        const matcher = data.gameWeek
+          .flatMap(dag => dag.games)
+          .filter(m => m.gameScheduleState === "OK" && new Date(m.startTimeUTC) > new Date())
+          .sort((a, b) => a.startTimeUTC.localeCompare(b.startTimeUTC));
+
+        const yta = document.getElementById("matcher");
+        let senasteDag = "";
+        let lista;
+        for (const match of matcher) {
+          // Tiden är i UTC i filen. Webbläsaren räknar om den till besökarens tidszon.
+          const start = new Date(match.startTimeUTC);
+          const dag = start.toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" });
+          if (dag !== senasteDag) {
+            const rubrik = document.createElement("h3");
+            rubrik.textContent = dag;
+            lista = document.createElement("ul");
+            yta.append(rubrik, lista);
+            senasteDag = dag;
+          }
+
+          const tid = document.createElement("span");
+          tid.className = "tid";
+          tid.textContent = start.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+          const lag = document.createElement("span");
+          lag.textContent = lagnamn(match.homeTeam) + " – " + lagnamn(match.awayTeam);
+          const rad = document.createElement("li");
+          rad.append(tid, lag);
+          lista.append(rad);
+        }
+
+        status.textContent = matcher.length > 0
+          ? matcher.length + " matcher. Hemmalaget står först, tiderna är i din tidszon."
+          : "Inga kommande matcher i den sparade filen.";
+      } catch (fel) {
+        console.error(fel);
+        status.textContent = "Kunde inte läsa matcherna.";
+      }
+    }
+
+    function lagnamn(lag) {
+      return lag.placeName.default + " " + lag.commonName.default;
+    }
+
     // async/await fungerar ungefär som i C#: vänta på svaret utan att låsa sidan.
     async function visaTabell() {
       const status = document.getElementById("status");
       try {
         // Relativ adress, så att den fungerar både lokalt och på GitHub Pages.
-        const svar = await fetch("data/standings.json");
-        if (!svar.ok) throw new Error("HTTP " + svar.status);
-
-        const data = await svar.json(); // JSON-text blir JavaScript-objekt
+        const data = await hamtaJson("data/standings.json");
         const lagen = data.standings.sort((a, b) => a.leagueSequence - b.leagueSequence);
 
         const tabell = document.getElementById("tabell");
@@ -73,6 +136,7 @@
       }
     }
 
+    visaMatcher();
     visaTabell();
   </script>
 </body>
