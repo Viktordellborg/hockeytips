@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hockeytips</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; color: #1b2733; }
+    .scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 0.4rem 0.6rem; text-align: right; border-bottom: 1px solid #dde3e9; white-space: nowrap; }
+    th:nth-child(2), td:nth-child(2) { text-align: left; }
+    td:last-child { font-weight: bold; }
+    tbody tr:hover { background: #f1f5f9; }
+  </style>
+</head>
+<body>
+  <h1>Hockeytips</h1>
+  <p id="status">Hämtar tabellen …</p>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Lag</th>
+          <th title="Spelade matcher">M</th>
+          <th title="Vinster">V</th>
+          <th title="Förluster">F</th>
+          <th title="Förluster efter förlängning eller straffar">ÖF</th>
+          <th title="Målskillnad">+/−</th>
+          <th title="Vinster, förluster och förlängningsförluster senaste 10">Senaste 10</th>
+          <th title="Poäng">P</th>
+        </tr>
+      </thead>
+      <tbody id="tabell"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // async/await fungerar ungefär som i C#: vänta på svaret utan att låsa sidan.
+    async function visaTabell() {
+      const status = document.getElementById("status");
+      try {
+        // Relativ adress, så att den fungerar både lokalt och på GitHub Pages.
+        const svar = await fetch("data/standings.json");
+        if (!svar.ok) throw new Error("HTTP " + svar.status);
+
+        const data = await svar.json(); // JSON-text blir JavaScript-objekt
+        const lagen = data.standings.sort((a, b) => a.leagueSequence - b.leagueSequence);
+
+        const tabell = document.getElementById("tabell");
+        for (const lag of lagen) {
+          const rad = tabell.insertRow();
+          const varden = [
+            lag.leagueSequence,
+            lag.teamName.default,
+            lag.gamesPlayed,
+            lag.wins,
+            lag.losses,
+            lag.otLosses,
+            lag.goalDifferential > 0 ? "+" + lag.goalDifferential : lag.goalDifferential,
+            `${lag.l10Wins}-${lag.l10Losses}-${lag.l10OtLosses}`,
+            lag.points,
+          ];
+          for (const varde of varden) rad.insertCell().textContent = varde;
+        }
+
+        const tid = new Date(data.standingsDateTimeUtc).toLocaleString("sv-SE");
+        status.textContent = "Tabellen hämtades " + tid;
+      } catch (fel) {
+        console.error(fel);
+        status.textContent = "Kunde inte läsa tabellen. Kör du sidan via en lokal server?";
+      }
+    }
+
+    visaTabell();
+  </script>
+</body>
+</html>

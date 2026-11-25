@@ -25,8 +25,8 @@ inofficiellt dokumenterat och kan ändras.
 
 ## Plan
 
-- [ ] 1. Repo på GitHub
-- [ ] 2. Hämta tabellen en gång till `data/standings.json` och visa den på en sida
+- [x] 1. Repo på GitHub
+- [x] 2. Hämta tabellen en gång till `data/standings.json` och visa den på en sida
 - [ ] 3. Publicera på GitHub Pages
 - [ ] 4. Visa kommande matcher
 - [ ] 5. Räkna form (senaste 5) och visa ett tips per match
