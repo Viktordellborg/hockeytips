@@ -16,14 +16,14 @@ Jag kan grundläggande Java, C#, databaser, VS Code och GitHub.
 
 ## Var saker ligger
 - index.html: sidan, med CSS och JavaScript
-- data/: JSON från NHL, skrivs av hamta_data.py
-- hamta_data.py: hämtar tabell, schema och form (bara Pythons standardbibliotek)
-- .github/workflows/hamta-data.yml: kör skriptet enligt schema, sparar ändringarna och bygger om sidan
+- data/: JSON från NHL, skrivs av fetch_data.py
+- fetch_data.py: hämtar tabell, schema och form (bara Pythons standardbibliotek)
+- .github/workflows/fetch-data.yml: kör skriptet enligt schema, sparar ändringarna och bygger om sidan
 - README.md: beskrivning och plan
 - IDEER.md: idéer som inte är byggda än
 
 ## Köra och testa
-- Hämta ny data: `python3 hamta_data.py`
+- Hämta ny data: `python3 fetch_data.py`
 - Visa sidan: `python3 -m http.server 8000` och öppna http://localhost:8000
 - Hämta från GitHub (pull) innan du ändrar något, eftersom Actions också gör commits.
 - Sidan publiceras från main på https://viktordellborg.github.io/hockeytips/
@@ -31,4 +31,4 @@ Jag kan grundläggande Java, C#, databaser, VS Code och GitHub.
 ## Namn
 - Små bokstäver med bindestreck för nya filer. Python-filer får ha understreck.
 - Datum skrivs ÅÅÅÅ-MM-DD.
-- Äldre kod och filnamn är på svenska. Skriv ny kod på engelska och fråga innan gammal kod döps om.
+- Commits före 2026-11-26 är delvis på svenska. De får vara kvar.
