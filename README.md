@@ -30,5 +30,5 @@ inofficiellt dokumenterat och kan ändras.
 - [x] 3. Publicera på GitHub Pages
 - [x] 4. Visa kommande matcher
 - [x] 5. Räkna form (senaste 5) och visa ett tips per match
-- [ ] 6. Hämta ny data automatiskt med GitHub Actions
+- [x] 6. Hämta ny data automatiskt med GitHub Actions
 - [ ] 7. Putsa designen och mobilvyn

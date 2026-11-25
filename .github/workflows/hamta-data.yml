@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: main # senaste versionen, även om körningen har stått i kö
 
       - name: Hämta data
         run: python3 hamta_data.py
