@@ -1,337 +1,6 @@
 {
  "gameWeek": [
   {
-   "date": "2026-11-25",
-   "games": [
-    {
-     "id": 2026020386,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "BOS",
-      "placeName": {
-       "default": "Boston"
-      },
-      "commonName": {
-       "default": "Bruins"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "WPG",
-      "placeName": {
-       "default": "Winnipeg"
-      },
-      "commonName": {
-       "default": "Jets"
-      }
-     }
-    },
-    {
-     "id": 2026020387,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "BUF",
-      "placeName": {
-       "default": "Buffalo"
-      },
-      "commonName": {
-       "default": "Sabres"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "NYR",
-      "placeName": {
-       "default": "New York"
-      },
-      "commonName": {
-       "default": "Rangers"
-      }
-     }
-    },
-    {
-     "id": 2026020388,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "TBL",
-      "placeName": {
-       "default": "Tampa Bay"
-      },
-      "commonName": {
-       "default": "Lightning"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "CAR",
-      "placeName": {
-       "default": "Carolina",
-       "fr": "Caroline"
-      },
-      "commonName": {
-       "default": "Hurricanes"
-      }
-     }
-    },
-    {
-     "id": 2026020389,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "FLA",
-      "placeName": {
-       "default": "Florida",
-       "fr": "Floride"
-      },
-      "commonName": {
-       "default": "Panthers"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "OTT",
-      "placeName": {
-       "default": "Ottawa"
-      },
-      "commonName": {
-       "default": "Senators",
-       "fr": "Sénateurs"
-      }
-     }
-    },
-    {
-     "id": 2026020390,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "NYI",
-      "placeName": {
-       "default": "New York"
-      },
-      "commonName": {
-       "default": "Islanders"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "STL",
-      "placeName": {
-       "default": "St. Louis"
-      },
-      "commonName": {
-       "default": "Blues"
-      }
-     }
-    },
-    {
-     "id": 2026020391,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "PIT",
-      "placeName": {
-       "default": "Pittsburgh"
-      },
-      "commonName": {
-       "default": "Penguins"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "CGY",
-      "placeName": {
-       "default": "Calgary"
-      },
-      "commonName": {
-       "default": "Flames"
-      }
-     }
-    },
-    {
-     "id": 2026020392,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "WSH",
-      "placeName": {
-       "default": "Washington"
-      },
-      "commonName": {
-       "default": "Capitals"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "PHI",
-      "placeName": {
-       "default": "Philadelphia",
-       "fr": "Philadelphie"
-      },
-      "commonName": {
-       "default": "Flyers"
-      }
-     }
-    },
-    {
-     "id": 2026020393,
-     "startTimeUTC": "2026-11-26T00:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "CBJ",
-      "placeName": {
-       "default": "Columbus"
-      },
-      "commonName": {
-       "default": "Blue Jackets"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "NJD",
-      "placeName": {
-       "default": "New Jersey"
-      },
-      "commonName": {
-       "default": "Devils"
-      }
-     }
-    },
-    {
-     "id": 2026020394,
-     "startTimeUTC": "2026-11-26T00:30:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "DET",
-      "placeName": {
-       "default": "Detroit"
-      },
-      "commonName": {
-       "default": "Red Wings"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "VAN",
-      "placeName": {
-       "default": "Vancouver"
-      },
-      "commonName": {
-       "default": "Canucks"
-      }
-     }
-    },
-    {
-     "id": 2026020395,
-     "startTimeUTC": "2026-11-26T01:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "DAL",
-      "placeName": {
-       "default": "Dallas"
-      },
-      "commonName": {
-       "default": "Stars"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "NSH",
-      "placeName": {
-       "default": "Nashville"
-      },
-      "commonName": {
-       "default": "Predators"
-      }
-     }
-    },
-    {
-     "id": 2026020396,
-     "startTimeUTC": "2026-11-26T01:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "MIN",
-      "placeName": {
-       "default": "Minnesota"
-      },
-      "commonName": {
-       "default": "Wild"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "UTA",
-      "placeName": {
-       "default": "Utah"
-      },
-      "commonName": {
-       "default": "Mammoth"
-      }
-     }
-    },
-    {
-     "id": 2026020397,
-     "startTimeUTC": "2026-11-26T02:30:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "COL",
-      "placeName": {
-       "default": "Colorado"
-      },
-      "commonName": {
-       "default": "Avalanche"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "MTL",
-      "placeName": {
-       "default": "Montréal"
-      },
-      "commonName": {
-       "default": "Canadiens"
-      }
-     }
-    },
-    {
-     "id": 2026020399,
-     "startTimeUTC": "2026-11-26T02:40:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "SEA",
-      "placeName": {
-       "default": "Seattle"
-      },
-      "commonName": {
-       "default": "Kraken"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "CHI",
-      "placeName": {
-       "default": "Chicago"
-      },
-      "commonName": {
-       "default": "Blackhawks"
-      }
-     }
-    },
-    {
-     "id": 2026020398,
-     "startTimeUTC": "2026-11-26T03:00:00Z",
-     "gameScheduleState": "OK",
-     "homeTeam": {
-      "abbrev": "ANA",
-      "placeName": {
-       "default": "Anaheim"
-      },
-      "commonName": {
-       "default": "Ducks"
-      }
-     },
-     "awayTeam": {
-      "abbrev": "SJS",
-      "placeName": {
-       "default": "San Jose"
-      },
-      "commonName": {
-       "default": "Sharks"
-      }
-     }
-    }
-   ]
-  },
-  {
    "date": "2026-11-26",
    "games": []
   },
@@ -1401,6 +1070,80 @@
       },
       "commonName": {
        "default": "Golden Knights"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "date": "2026-12-02",
+   "games": [
+    {
+     "id": 2026020445,
+     "startTimeUTC": "2026-12-03T00:30:00Z",
+     "gameScheduleState": "OK",
+     "homeTeam": {
+      "abbrev": "MTL",
+      "placeName": {
+       "default": "Montréal"
+      },
+      "commonName": {
+       "default": "Canadiens"
+      }
+     },
+     "awayTeam": {
+      "abbrev": "TBL",
+      "placeName": {
+       "default": "Tampa Bay"
+      },
+      "commonName": {
+       "default": "Lightning"
+      }
+     }
+    },
+    {
+     "id": 2026020446,
+     "startTimeUTC": "2026-12-03T01:00:00Z",
+     "gameScheduleState": "OK",
+     "homeTeam": {
+      "abbrev": "STL",
+      "placeName": {
+       "default": "St. Louis"
+      },
+      "commonName": {
+       "default": "Blues"
+      }
+     },
+     "awayTeam": {
+      "abbrev": "PIT",
+      "placeName": {
+       "default": "Pittsburgh"
+      },
+      "commonName": {
+       "default": "Penguins"
+      }
+     }
+    },
+    {
+     "id": 2026020447,
+     "startTimeUTC": "2026-12-03T02:30:00Z",
+     "gameScheduleState": "OK",
+     "homeTeam": {
+      "abbrev": "UTA",
+      "placeName": {
+       "default": "Utah"
+      },
+      "commonName": {
+       "default": "Mammoth"
+      }
+     },
+     "awayTeam": {
+      "abbrev": "WPG",
+      "placeName": {
+       "default": "Winnipeg"
+      },
+      "commonName": {
+       "default": "Jets"
       }
      }
     }
