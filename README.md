@@ -32,3 +32,16 @@ inofficiellt dokumenterat och kan ändras.
 - [x] 5. Räkna form (senaste 5) och visa ett tips per match
 - [x] 6. Hämta ny data automatiskt med GitHub Actions
 - [x] 7. Putsa designen och mobilvyn
+
+## Plan: tippningsliga med Supabase
+
+Supabase ger en Postgres-databas och inloggning. Sidan pratar direkt med Supabase från webbläsaren.
+Nyckeln i sidan (publishable/anon) är offentlig. Säkerheten kommer från Row Level Security (RLS)
+på varje tabell. Den hemliga nyckeln (service_role/secret) ska aldrig in i repot.
+
+- [ ] 1. Koppla sidan till Supabase-projektet
+- [ ] 2. Inloggning med e-post
+- [ ] 3. Tabeller för ligor, medlemmar och tips, med RLS
+- [ ] 4. Tippa på matcher innan de startar
+- [ ] 5. Skapa en liga och bjud in med en kod
+- [ ] 6. Poäng och topplista

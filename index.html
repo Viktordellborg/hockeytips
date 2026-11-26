@@ -109,8 +109,10 @@
       <tbody id="standings"></tbody>
     </table>
   </div>
+  <p id="supabase-status">Kontrollerar Supabase …</p>
   </main>
 
+  <script src="supabase-config.js"></script>
   <script>
     // Text and points for each result in form.json. Both are used below.
     const RESULTS = {
@@ -264,8 +266,25 @@
       }
     }
 
+    // Step 1 test: asks Supabase's login service if it is up.
+    // The apikey header tells Supabase which project we belong to.
+    async function checkSupabase() {
+      const status = document.getElementById("supabase-status");
+      try {
+        const response = await fetch(SUPABASE_URL + "/auth/v1/health", {
+          headers: { apikey: SUPABASE_KEY },
+        });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        status.textContent = "Supabase: ansluten";
+      } catch (error) {
+        console.error(error);
+        status.textContent = "Supabase: ingen kontakt";
+      }
+    }
+
     showGames();
     showTable();
+    checkSupabase();
   </script>
 </body>
 </html>
