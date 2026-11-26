@@ -40,7 +40,7 @@ Nyckeln i sidan (publishable/anon) är offentlig. Säkerheten kommer från Row L
 på varje tabell. Den hemliga nyckeln (service_role/secret) ska aldrig in i repot.
 
 - [x] 1. Koppla sidan till Supabase-projektet
-- [ ] 2. Inloggning med e-post
+- [x] 2. Inloggning med e-post
 - [ ] 3. Tabeller för ligor, medlemmar och tips, med RLS
 - [ ] 4. Tippa på matcher innan de startar
 - [ ] 5. Skapa en liga och bjud in med en kod
