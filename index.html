@@ -57,6 +57,17 @@
     td:last-child { font-weight: 700; }
     .short { display: none; }
 
+    /* Account: login form and logged-in row. */
+    #account { margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 0.75rem; }
+    #account h2 { margin-top: 0; }
+    #account form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin-top: 0.5rem; }
+    #account label { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--muted); flex: 1 1 12rem; }
+    #account input { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 0.4rem; background: var(--ice); color: var(--text); }
+    #account button { font: inherit; padding: 0.45rem 0.9rem; border: 1px solid var(--blue); border-radius: 0.4rem; background: var(--blue); color: var(--win-text); cursor: pointer; }
+    #account button.secondary { background: transparent; color: var(--blue); }
+    #account button:focus-visible, #account input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+    [hidden] { display: none !important; }
+
     /* Mobile: team abbreviation in the table and fewer columns. */
     @media (max-width: 40rem) {
       .long { display: none; }
@@ -83,6 +94,31 @@
   </header>
 
   <main>
+  <section id="account">
+    <h2>Konto</h2>
+    <p id="account-status">Kontrollerar inloggning …</p>
+
+    <!-- Shown when nobody is logged in. -->
+    <form id="login-form" hidden>
+      <label>E-post <input id="email" type="email" autocomplete="email" required></label>
+      <label>Lösenord <input id="password" type="password" autocomplete="current-password" minlength="6" required></label>
+      <button type="submit" id="login-button">Logga in</button>
+      <button type="button" id="signup-button" class="secondary">Skapa konto</button>
+      <button type="button" id="forgot-button" class="secondary">Glömt lösenord?</button>
+    </form>
+
+    <!-- Shown after clicking the reset link in the email. -->
+    <form id="new-password-form" hidden>
+      <label>Nytt lösenord <input id="new-password" type="password" autocomplete="new-password" minlength="6" required></label>
+      <button type="submit">Spara lösenord</button>
+    </form>
+
+    <!-- Shown when someone is logged in. -->
+    <div id="logged-in" hidden>
+      <button type="button" id="logout-button" class="secondary">Logga ut</button>
+    </div>
+  </section>
+
   <h2>Kommande matcher</h2>
   <p id="games-status">Hämtar matcherna …</p>
   <p>Vi tippar på laget med flest poäng på sina 5 senaste matcher: vinst (V) ger 2, förlust efter förlängning eller straffar (Ö) ger 1 och förlust (F) ger 0.
@@ -109,9 +145,10 @@
       <tbody id="standings"></tbody>
     </table>
   </div>
-  <p id="supabase-status">Kontrollerar Supabase …</p>
   </main>
 
+  <!-- supabase-js from a CDN, locked to one version. It exposes a global "supabase" object. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
   <script src="supabase-config.js"></script>
   <script>
     // Text and points for each result in form.json. Both are used below.
@@ -266,25 +303,85 @@
       }
     }
 
-    // Step 1 test: asks Supabase's login service if it is up.
-    // The apikey header tells Supabase which project we belong to.
-    async function checkSupabase() {
-      const status = document.getElementById("supabase-status");
-      try {
-        const response = await fetch(SUPABASE_URL + "/auth/v1/health", {
-          headers: { apikey: SUPABASE_KEY },
-        });
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        status.textContent = "Supabase: ansluten";
-      } catch (error) {
-        console.error(error);
-        status.textContent = "Supabase: ingen kontakt";
-      }
+    // ----- Account (Supabase Auth) -----
+    // The client keeps the login session in the browser (localStorage), so you stay logged in after reload.
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const accountStatus = document.getElementById("account-status");
+    const loginForm = document.getElementById("login-form");
+    const newPasswordForm = document.getElementById("new-password-form");
+    const loggedIn = document.getElementById("logged-in");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    // Shows the right part of the account box. "session" is null when logged out.
+    function showAccount(session) {
+      loginForm.hidden = session !== null;
+      loggedIn.hidden = session === null;
+      newPasswordForm.hidden = true;
+      accountStatus.textContent = session
+        ? "Inloggad som " + session.user.email
+        : "Logga in för att tippa och vara med i ligor.";
     }
+
+    // Supabase returns { data, error } instead of throwing. This shows the error, if any.
+    function reportError(error) {
+      if (error) accountStatus.textContent = "Fel: " + error.message;
+      return error;
+    }
+
+    loginForm.addEventListener("submit", async event => {
+      event.preventDefault(); // Stop the browser from reloading the page.
+      const { error } = await db.auth.signInWithPassword({
+        email: emailInput.value,
+        password: passwordInput.value,
+      });
+      reportError(error);
+    });
+
+    document.getElementById("signup-button").addEventListener("click", async () => {
+      if (!loginForm.reportValidity()) return; // Uses the "required" and "minlength" rules in the form.
+      const { data, error } = await db.auth.signUp({
+        email: emailInput.value,
+        password: passwordInput.value,
+        options: { emailRedirectTo: location.origin + location.pathname },
+      });
+      if (reportError(error)) return;
+      // With email confirmation on, there is no session until the link in the email is clicked.
+      if (!data.session) accountStatus.textContent = "Kolla din e-post och klicka på länken för att bekräfta kontot.";
+    });
+
+    document.getElementById("forgot-button").addEventListener("click", async () => {
+      if (!emailInput.reportValidity()) return;
+      const { error } = await db.auth.resetPasswordForEmail(emailInput.value, {
+        redirectTo: location.origin + location.pathname,
+      });
+      if (!reportError(error)) accountStatus.textContent = "Om kontot finns har vi skickat en länk för nytt lösenord.";
+    });
+
+    newPasswordForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const { error } = await db.auth.updateUser({ password: document.getElementById("new-password").value });
+      if (!reportError(error)) accountStatus.textContent = "Lösenordet är sparat. Du är inloggad.";
+      if (!error) newPasswordForm.hidden = true;
+    });
+
+    document.getElementById("logout-button").addEventListener("click", async () => {
+      reportError((await db.auth.signOut()).error);
+    });
+
+    // Runs on page load and every time the login state changes (login, logout, reset link).
+    db.auth.onAuthStateChange((event, session) => {
+      showAccount(session);
+      if (event === "PASSWORD_RECOVERY") {
+        loggedIn.hidden = true;
+        newPasswordForm.hidden = false;
+        accountStatus.textContent = "Välj ett nytt lösenord.";
+      }
+    });
 
     showGames();
     showTable();
-    checkSupabase();
   </script>
 </body>
 </html>

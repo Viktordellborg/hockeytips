@@ -39,7 +39,7 @@ Supabase ger en Postgres-databas och inloggning. Sidan pratar direkt med Supabas
 Nyckeln i sidan (publishable/anon) är offentlig. Säkerheten kommer från Row Level Security (RLS)
 på varje tabell. Den hemliga nyckeln (service_role/secret) ska aldrig in i repot.
 
-- [ ] 1. Koppla sidan till Supabase-projektet
+- [x] 1. Koppla sidan till Supabase-projektet
 - [ ] 2. Inloggning med e-post
 - [ ] 3. Tabeller för ligor, medlemmar och tips, med RLS
 - [ ] 4. Tippa på matcher innan de startar
