@@ -67,6 +67,11 @@
     #account button.secondary { background: transparent; color: var(--blue); }
     #account button:focus-visible, #account input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
     [hidden] { display: none !important; }
+    #account h3 { margin: 1.2rem 0 0.2rem; font-size: 1.1rem; }
+    #league-list { list-style: none; margin: 0.3rem 0; padding: 0; }
+    #league-list li { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; padding: 0.4rem 0; border-bottom: 1px solid var(--line); }
+    #league-list .league-name { flex: 1; font-weight: 700; }
+    #league-list .code { font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.1em; }
 
     /* Your own tip: shown only when logged in (body gets the class "logged-in"). */
     .my-tip { display: none; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.35rem; padding-left: 0.6rem; font-size: 0.85rem; color: var(--muted); }
@@ -123,6 +128,19 @@
     <!-- Shown when someone is logged in. -->
     <div id="logged-in" hidden>
       <button type="button" id="logout-button" class="secondary">Logga ut</button>
+
+      <h3>Dina ligor</h3>
+      <ul id="league-list"></ul>
+      <p id="league-message"></p>
+
+      <form id="create-league-form">
+        <label>Ny liga <input id="league-name" maxlength="50" required></label>
+        <button type="submit">Skapa liga</button>
+      </form>
+      <form id="join-league-form">
+        <label>Inbjudningskod <input id="invite-code" maxlength="6" autocomplete="off" required></label>
+        <button type="submit">Gå med</button>
+      </form>
     </div>
   </section>
 
@@ -439,6 +457,67 @@
       reportError((await db.auth.signOut()).error);
     });
 
+    // ----- Leagues -----
+    const leagueList = document.getElementById("league-list");
+    const leagueMessage = document.getElementById("league-message");
+
+    async function loadLeagues() {
+      // league_members(count): Supabase counts the member rows for each league in the same request.
+      // RLS makes sure we only get leagues we are in.
+      const { data, error } = await db
+        .from("leagues")
+        .select("id, name, invite_code, league_members(count)")
+        .order("created_at");
+      if (error) {
+        console.error(error);
+        leagueMessage.textContent = "Kunde inte hämta ligorna.";
+        return;
+      }
+      leagueList.replaceChildren();
+      for (const league of data) {
+        const members = league.league_members[0].count;
+        const row = document.createElement("li");
+        row.append(
+          createElement("span", "league-name", league.name),
+          createElement("span", "", members + (members === 1 ? " medlem" : " medlemmar")),
+          createElement("span", "", "Kod: "),
+        );
+        row.lastChild.append(createElement("span", "code", league.invite_code));
+        leagueList.append(row);
+      }
+      leagueMessage.textContent = data.length === 0 ? "Du är inte med i någon liga än." : "";
+    }
+
+    document.getElementById("create-league-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const input = document.getElementById("league-name");
+      // created_by is filled in by the database (default auth.uid()), and a trigger adds you as a member.
+      const { error } = await db.from("leagues").insert({ name: input.value.trim() });
+      if (error) {
+        console.error(error);
+        leagueMessage.textContent = "Kunde inte skapa ligan.";
+        return;
+      }
+      input.value = "";
+      await loadLeagues();
+      leagueMessage.textContent = "Ligan är skapad. Dela koden med dina vänner.";
+    });
+
+    document.getElementById("join-league-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const input = document.getElementById("invite-code");
+      // rpc: calls the database function join_league (see supabase/join-league.sql).
+      const { error } = await db.rpc("join_league", { code: input.value });
+      if (error) {
+        console.error(error);
+        leagueMessage.textContent = error.message;
+        return;
+      }
+      input.value = "";
+      await loadLeagues();
+      leagueMessage.textContent = "Du är med i ligan.";
+    });
+
     // Runs on page load and every time the login state changes (login, logout, reset link).
     db.auth.onAuthStateChange((event, session) => {
       showAccount(session);
@@ -447,7 +526,9 @@
       // setTimeout: Supabase must not be called directly inside this callback, so wait one tick.
       if (session) {
         setTimeout(loadMyTips, 0);
+        setTimeout(loadLeagues, 0);
       } else {
+        leagueList.replaceChildren();
         myTips.clear();
         updateTipButtons();
       }
