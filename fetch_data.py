@@ -1,4 +1,4 @@
-"""Fetches standings, schedule and form from the NHL and saves them as JSON in data/.
+"""Fetches standings, schedule, form and results from the NHL and saves them as JSON in data/.
 
 Run from the project folder: python3 fetch_data.py
 """
@@ -56,24 +56,37 @@ def get_result(game, team):
     return "L" if game["gameOutcome"]["lastPeriodType"] == "REG" else "OT"
 
 
-def fetch_form(standings):
+def get_outcome(game):
+    """1X2 after regulation time: winner's abbreviation, or TIE if the game went to overtime or shootout."""
+    if game["gameOutcome"]["lastPeriodType"] != "REG":
+        return "TIE"
+    home, away = game["homeTeam"], game["awayTeam"]
+    return home["abbrev"] if home["score"] > away["score"] else away["abbrev"]
+
+
+def fetch_form_and_results(standings):
     form = {}
+    results = {}  # game id -> outcome. Each game shows up for both teams, which is fine.
     for team in (row["teamAbbrev"]["default"] for row in standings["standings"]):
         games = fetch(f"/club-schedule-season/{team}/now")["games"]
-        # gameType 2 = regular season. OFF and FINAL = finished.
-        finished = [g for g in games if g["gameType"] == 2 and g["gameState"] in ("OFF", "FINAL")]
+        # gameType 2 = regular season, 3 = playoffs. OFF and FINAL = finished.
+        finished = [g for g in games if g["gameType"] in (2, 3) and g["gameState"] in ("OFF", "FINAL")]
         finished.sort(key=lambda g: g["startTimeUTC"])
-        form[team] = [get_result(g, team) for g in finished[-5:]]  # oldest first
+        regular = [g for g in finished if g["gameType"] == 2]
+        form[team] = [get_result(g, team) for g in regular[-5:]]  # oldest first
+        for game in finished:
+            results[str(game["id"])] = get_outcome(game)
         time.sleep(0.2)  # be kind to the API
-    return form
+    return form, dict(sorted(results.items()))
 
 
 # Fetch everything first, then save. If something fails, the old files are kept.
 standings = fetch("/standings/now")
 schedule = trim_schedule(fetch("/schedule/now"))
-form = fetch_form(standings)
+form, results = fetch_form_and_results(standings)
 
 save("standings.json", standings)
 save("schedule.json", schedule)
 save("form.json", form)
-print("Saved standings, schedule and form for", len(form), "teams")
+save("results.json", results)
+print("Saved standings, schedule and form for", len(form), "teams, and", len(results), "results")

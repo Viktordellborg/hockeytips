@@ -72,6 +72,9 @@
     #league-list li { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; padding: 0.4rem 0; border-bottom: 1px solid var(--line); }
     #league-list .league-name { flex: 1; font-weight: 700; }
     #league-list .code { font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.1em; }
+    .leaderboard { flex-basis: 100%; margin: 0.2rem 0 0; padding-left: 1.6rem; }
+    .leaderboard li { border: 0 !important; padding: 0.1rem 0 !important; }
+    .leaderboard .score { color: var(--muted); font-variant-numeric: tabular-nums; }
 
     /* Your own tip: shown only when logged in (body gets the class "logged-in"). */
     .my-tip { display: none; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.35rem; padding-left: 0.6rem; font-size: 0.85rem; color: var(--muted); }
@@ -128,6 +131,11 @@
     <!-- Shown when someone is logged in. -->
     <div id="logged-in" hidden>
       <button type="button" id="logout-button" class="secondary">Logga ut</button>
+
+      <form id="profile-form">
+        <label>Ditt namn i topplistan <input id="display-name" maxlength="30" required></label>
+        <button type="submit">Spara namn</button>
+      </form>
 
       <h3>Dina ligor</h3>
       <ul id="league-list"></ul>
@@ -270,18 +278,25 @@
     // ----- Your own tips (saved in Supabase) -----
     // Map: game id -> team abbreviation you picked. Filled from the tips table after login.
     const myTips = new Map();
+    const TIE = "TIE"; // Saved in picked_team when you tip on a tie. Same value as in results.json.
     let currentUserId = null; // Set when someone logs in.
 
     // "Ditt tips: [BOS] [WPG]" under a game. One button per team.
     function createMyTip(game) {
       const box = createElement("div", "my-tip", "Ditt tips:");
-      for (const team of [game.homeTeam, game.awayTeam]) {
-        const button = createElement("button", "", team.abbrev);
+      // 1X2 after regulation time: home win, tie (goes to overtime or shootout), away win.
+      const choices = [
+        { value: game.homeTeam.abbrev, label: game.homeTeam.abbrev, name: "Tippa på " + teamName(game.homeTeam) },
+        { value: TIE, label: "Lika", name: "Tippa på lika efter full tid" },
+        { value: game.awayTeam.abbrev, label: game.awayTeam.abbrev, name: "Tippa på " + teamName(game.awayTeam) },
+      ];
+      for (const choice of choices) {
+        const button = createElement("button", "", choice.label);
         button.type = "button";
         button.dataset.game = game.id;       // data-game="..." in the HTML, read below.
-        button.dataset.team = team.abbrev;
-        button.setAttribute("aria-label", "Tippa på " + teamName(team));
-        button.addEventListener("click", () => saveTip(game, team.abbrev, box));
+        button.dataset.team = choice.value;
+        button.setAttribute("aria-label", choice.name);
+        button.addEventListener("click", () => saveTip(game, choice.value, box));
         box.append(button);
       }
       box.append(createElement("span", "tip-message", ""));
@@ -473,6 +488,7 @@
         leagueMessage.textContent = "Kunde inte hämta ligorna.";
         return;
       }
+      const scores = await loadScores();
       leagueList.replaceChildren();
       for (const league of data) {
         const members = league.league_members[0].count;
@@ -483,10 +499,83 @@
           createElement("span", "", "Kod: "),
         );
         row.lastChild.append(createElement("span", "code", league.invite_code));
+        if (scores) row.append(createLeaderboard(scores.get(league.id) ?? []));
         leagueList.append(row);
       }
       leagueMessage.textContent = data.length === 0 ? "Du är inte med i någon liga än." : "";
     }
+
+    // Fetches members, names, tips and results, and counts correct tips per league.
+    // Returns Map: league id -> list of { name, correct, decided }. RLS limits everything to your leagues.
+    async function loadScores() {
+      const [members, profiles, tips, results] = await Promise.all([
+        db.from("league_members").select("league_id, user_id"),
+        db.from("profiles").select("id, display_name"),
+        db.from("tips").select("user_id, game_id, picked_team"),
+        fetchJson("data/results.json"),
+      ]);
+      const error = members.error ?? profiles.error ?? tips.error;
+      if (error) {
+        console.error(error);
+        return null;
+      }
+      const names = new Map(profiles.data.map(p => [p.id, p.display_name]));
+
+      // Per user: how many tips have a result (decided), and how many of them are right (correct).
+      const perUser = new Map();
+      for (const tip of tips.data) {
+        const outcome = results[tip.game_id];
+        if (outcome === undefined) continue; // Not played yet.
+        const score = perUser.get(tip.user_id) ?? { correct: 0, decided: 0 };
+        score.decided++;
+        if (tip.picked_team === outcome) score.correct++;
+        perUser.set(tip.user_id, score);
+      }
+
+      const scores = new Map();
+      for (const member of members.data) {
+        const score = perUser.get(member.user_id) ?? { correct: 0, decided: 0 };
+        const list = scores.get(member.league_id) ?? [];
+        list.push({ name: names.get(member.user_id) ?? "Namnlös spelare", ...score });
+        scores.set(member.league_id, list);
+      }
+      return scores;
+    }
+
+    // Numbered list, most correct tips first. Same score: the one with fewer decided tips first.
+    function createLeaderboard(players) {
+      players.sort((a, b) => b.correct - a.correct || a.decided - b.decided || a.name.localeCompare(b.name, "sv"));
+      const list = createElement("ol", "leaderboard", "");
+      for (const player of players) {
+        const row = createElement("li", "", player.name + " ");
+        row.append(createElement("span", "score", player.correct + " rätt av " + player.decided));
+        list.append(row);
+      }
+      return list;
+    }
+
+    // ----- Display name -----
+    const nameInput = document.getElementById("display-name");
+
+    async function loadProfile() {
+      // maybeSingle: one row or null, without an error when the row is missing.
+      const { data, error } = await db.from("profiles").select("display_name").eq("id", currentUserId).maybeSingle();
+      if (error) console.error(error);
+      nameInput.value = data ? data.display_name : "";
+      if (!data && !error) leagueMessage.textContent = "Välj ett namn så att dina vänner ser vem du är.";
+    }
+
+    document.getElementById("profile-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const { error } = await db.from("profiles").upsert({ id: currentUserId, display_name: nameInput.value.trim() });
+      if (error) {
+        console.error(error);
+        leagueMessage.textContent = "Kunde inte spara namnet.";
+        return;
+      }
+      await loadLeagues();
+      leagueMessage.textContent = "Namnet är sparat.";
+    });
 
     document.getElementById("create-league-form").addEventListener("submit", async event => {
       event.preventDefault();
@@ -526,7 +615,10 @@
       // setTimeout: Supabase must not be called directly inside this callback, so wait one tick.
       if (session) {
         setTimeout(loadMyTips, 0);
-        setTimeout(loadLeagues, 0);
+        setTimeout(async () => {
+          await loadLeagues();
+          await loadProfile();
+        }, 0);
       } else {
         leagueList.replaceChildren();
         myTips.clear();

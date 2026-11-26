@@ -43,5 +43,5 @@ på varje tabell. Den hemliga nyckeln (service_role/secret) ska aldrig in i repo
 - [x] 2. Inloggning med e-post
 - [ ] 3. Tabeller för ligor, medlemmar och tips, med RLS
 - [x] 4. Tippa på matcher innan de startar
-- [ ] 5. Skapa en liga och bjud in med en kod
+- [x] 5. Skapa en liga och bjud in med en kod
 - [ ] 6. Poäng och topplista
