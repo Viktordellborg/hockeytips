@@ -41,7 +41,7 @@ på varje tabell. Den hemliga nyckeln (service_role/secret) ska aldrig in i repo
 
 - [x] 1. Koppla sidan till Supabase-projektet
 - [x] 2. Inloggning med e-post
-- [ ] 3. Tabeller för ligor, medlemmar och tips, med RLS
+- [x] 3. Tabeller för ligor, medlemmar och tips, med RLS
 - [x] 4. Tippa på matcher innan de startar
 - [x] 5. Skapa en liga och bjud in med en kod
-- [ ] 6. Poäng och topplista
+- [x] 6. Poäng och topplista

@@ -1,4 +1,4 @@
-"""Fetches standings, schedule, form and results from the NHL and saves them as JSON in data/.
+"""Fetches standings, schedule, form, results and point leaders from the NHL and saves them as JSON in data/.
 
 Run from the project folder: python3 fetch_data.py
 """
@@ -80,13 +80,25 @@ def fetch_form_and_results(standings):
     return form, dict(sorted(results.items()))
 
 
+def fetch_leaders():
+    """Top 5 in points, plus a large action photo of the leader for the top of the page.
+    The page shows the images straight from the NHL's servers. Nothing is downloaded to the repo."""
+    data = fetch("/skater-stats-leaders/current?categories=points&limit=5")
+    fields = ("id", "firstName", "lastName", "sweaterNumber", "headshot", "teamAbbrev", "position", "value")
+    players = [{field: player[field] for field in fields} for player in data["points"]]
+    hero_image = fetch(f"/player/{players[0]['id']}/landing").get("heroImage") if players else None
+    return {"points": players, "heroImage": hero_image}
+
+
 # Fetch everything first, then save. If something fails, the old files are kept.
 standings = fetch("/standings/now")
 schedule = trim_schedule(fetch("/schedule/now"))
 form, results = fetch_form_and_results(standings)
+leaders = fetch_leaders()
 
 save("standings.json", standings)
 save("schedule.json", schedule)
 save("form.json", form)
 save("results.json", results)
-print("Saved standings, schedule and form for", len(form), "teams, and", len(results), "results")
+save("leaders.json", leaders)
+print("Saved standings, schedule and form for", len(form), "teams,", len(results), "results and", len(leaders["points"]), "point leaders")

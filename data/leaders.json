@@ -1,0 +1,75 @@
+{
+ "points": [
+  {
+   "id": 8478402,
+   "firstName": {
+    "default": "Connor"
+   },
+   "lastName": {
+    "default": "McDavid"
+   },
+   "sweaterNumber": 97,
+   "headshot": "https://assets.nhle.com/mugs/nhl/20262027/EDM/8478402.png",
+   "teamAbbrev": "EDM",
+   "position": "C",
+   "value": 59
+  },
+  {
+   "id": 8478864,
+   "firstName": {
+    "default": "Kirill"
+   },
+   "lastName": {
+    "default": "Kaprizov"
+   },
+   "sweaterNumber": 97,
+   "headshot": "https://assets.nhle.com/mugs/nhl/20262027/MIN/8478864.png",
+   "teamAbbrev": "MIN",
+   "position": "L",
+   "value": 49
+  },
+  {
+   "id": 8477934,
+   "firstName": {
+    "default": "Leon"
+   },
+   "lastName": {
+    "default": "Draisaitl"
+   },
+   "sweaterNumber": 29,
+   "headshot": "https://assets.nhle.com/mugs/nhl/20262027/EDM/8477934.png",
+   "teamAbbrev": "EDM",
+   "position": "C",
+   "value": 47
+  },
+  {
+   "id": 8480803,
+   "firstName": {
+    "default": "Evan"
+   },
+   "lastName": {
+    "default": "Bouchard"
+   },
+   "sweaterNumber": 2,
+   "headshot": "https://assets.nhle.com/mugs/nhl/20262027/EDM/8480803.png",
+   "teamAbbrev": "EDM",
+   "position": "D",
+   "value": 41
+  },
+  {
+   "id": 8478398,
+   "firstName": {
+    "default": "Kyle"
+   },
+   "lastName": {
+    "default": "Connor"
+   },
+   "sweaterNumber": 81,
+   "headshot": "https://assets.nhle.com/mugs/nhl/20262027/WPG/8478398.png",
+   "teamAbbrev": "WPG",
+   "position": "L",
+   "value": 35
+  }
+ ],
+ "heroImage": "https://assets.nhle.com/mugs/actionshots/1296x729/8478402.jpg"
+}

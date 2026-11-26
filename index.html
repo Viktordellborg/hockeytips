@@ -5,111 +5,313 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hockeytips</title>
   <style>
-    /* Colors as variables. Dark mode only changes the values. */
+    /* ----- Design tokens -----
+       Clean and quiet: lots of air, hairline borders, one blue accent.
+       The big photo and the team logos bring the color. Red is kept for the statistics tip. */
     :root {
       color-scheme: light dark;
-      --ice: #eaf2f7; --surface: #ffffff; --text: #10243a; --muted: #506479;
-      --line: #cddbe6; --blue: #1450a0; --red: #c4182f; --win: #1450a0; --win-text: #ffffff;
+      --bg: #f3f5f8;
+      --surface: #ffffff;
+      --surface-2: #eef2f6;
+      --text: #0b1622;
+      --muted: #5a6b7c;
+      --line: #e0e6ed;
+      --blue: #1a4fb5;
+      --red: #d4202f;
+      --on-accent: #ffffff;
+      --display: "Barlow Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+      --body: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+      --radius: 18px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --ice: #0e1d2e; --surface: #16293d; --text: #e6eff7; --muted: #9db2c6;
-        --line: #2c435a; --blue: #7db4f5; --red: #ff7384; --win: #7db4f5; --win-text: #0e1d2e;
+        --bg: #070c13;
+        --surface: #0f1722;
+        --surface-2: #162130;
+        --text: #eef3f8;
+        --muted: #8fa0b2;
+        --line: #1f2b3a;
+        --blue: #7aa7ff;
+        --red: #ff5a64;
+        --on-accent: #070c13;
       }
     }
+
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--ice); color: var(--text); font: 1rem/1.45 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
-    header, main { max-width: 60rem; margin: 0 auto; padding: 0 1rem; }
-    header { padding-top: 2rem; }
-    h1 { margin: 0; font-size: clamp(2.4rem, 9vw, 4.5rem); line-height: 1; font-weight: 800; letter-spacing: -0.03em; }
-    h2 { margin: 2.5rem 0 0.3rem; font-size: 1.5rem; }
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 1rem/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+    :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
     p { margin: 0.3rem 0; max-width: 65ch; color: var(--muted); }
+    img { display: block; }
+    h2, h3, summary { font-family: var(--display); }
+    h2 { margin: 0 0 0.3rem; font-size: 2.2rem; line-height: 1; font-weight: 700; }
+    h3 { margin: 1.6rem 0 0.4rem; font-size: 1.4rem; font-weight: 700; }
+    .wrap { max-width: 76rem; margin: 0 auto; padding: 0 1.25rem; }
 
-    /* The rink from above: blue lines, red center line and center circle. */
-    .rink { display: block; width: 100%; height: 5.5rem; margin-top: 1rem; border: 2px solid var(--line); border-radius: 2.75rem; background: var(--surface); }
+    /* ----- Top bar -----
+       backdrop-filter blurs what scrolls under the bar, like frosted glass. */
+    .topbar {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar .wrap { display: flex; align-items: center; gap: 1rem; height: 3.5rem; }
+    h1 { margin: 0; font-family: var(--display); font-size: 1.7rem; font-weight: 800; letter-spacing: 0.01em; }
+    h1 a { color: inherit; text-decoration: none; }
+    .topbar nav { margin-left: auto; display: flex; gap: 0.2rem; }
+    .topbar nav a { padding: 0.35rem 0.7rem; border-radius: 999px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: 0.92rem; }
+    .topbar nav a:hover { color: var(--text); background: var(--surface-2); }
 
-    #games details { margin-top: 0.8rem; }
-    summary { padding: 0.6rem 0; cursor: pointer; font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid var(--line); }
+    /* ----- Hero: the league's top scorer in a big action photo -----
+       Always dark, whatever the color mode, because the text sits on a photo. */
+    .hero {
+      position: relative; overflow: hidden; margin-top: 1.25rem;
+      border-radius: var(--radius); background: #0b1520; color: #fff;
+      min-height: clamp(22rem, 58vh, 34rem); display: grid; align-items: end;
+    }
+    /* object-fit: cover fills the box like a background image and crops what doesn't fit. */
+    .hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 65% 25%; }
+    .hero::after {
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(90deg, rgba(5, 10, 18, 0.92) 0%, rgba(5, 10, 18, 0.55) 38%, rgba(5, 10, 18, 0) 70%),
+        linear-gradient(0deg, rgba(5, 10, 18, 0.7) 0%, rgba(5, 10, 18, 0) 45%);
+    }
+    .hero-text { position: relative; z-index: 1; padding: clamp(1.5rem, 4vw, 3rem); max-width: 40rem; }
+    .hero-label { margin: 0 0 0.6rem; color: rgba(255, 255, 255, 0.75); font-weight: 600; }
+    .hero-name { margin: 0; font-family: var(--display); font-weight: 800; line-height: 0.88; font-size: clamp(3.5rem, 9vw, 7rem); letter-spacing: -0.01em; }
+    .hero-name span { display: block; }
+    .hero-name .first { font-size: 0.42em; font-weight: 600; letter-spacing: 0.01em; opacity: 0.85; }
+    .hero-stat { display: flex; align-items: center; gap: 0.8rem; margin-top: 1.2rem; color: rgba(255, 255, 255, 0.85); max-width: none; }
+    .hero-stat strong { font-family: var(--display); font-size: 3rem; font-weight: 800; line-height: 1; color: #fff; }
+    .hero-stat img { width: 2.6rem; height: 2.6rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.6rem; }
+    .button { display: inline-block; padding: 0.65rem 1.2rem; border-radius: 999px; font-weight: 700; text-decoration: none; background: #fff; color: #0b1622; }
+    .button.ghost { background: rgba(255, 255, 255, 0.12); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+    .button:hover { filter: brightness(0.92); }
+    .hero-credit { position: absolute; z-index: 1; right: 1rem; bottom: 0.7rem; margin: 0; font-size: 0.72rem; color: rgba(255, 255, 255, 0.6); }
+
+    /* ----- Page layout -----
+       grid-template-areas names the cells, so the layout reads like a small map.
+       Wide screens: games and table on the left, a sticky account column on the right. */
+    main {
+      padding-top: 3rem; padding-bottom: 4rem;
+      display: grid; gap: 3.5rem 2.5rem;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "leaders" "account" "games" "table";
+    }
+    /* Logged in on a narrower screen: games first, the login box is no longer needed at the top. */
+    @media (max-width: 61.99rem) {
+      .logged-in main { grid-template-areas: "leaders" "games" "account" "table"; }
+      #account { position: relative; }
+    }
+    @media (min-width: 62rem) {
+      main { grid-template-columns: minmax(0, 1fr) 21rem; grid-template-areas: "leaders leaders" "games account" "table account"; }
+      /* sticky: the column follows along while you scroll, within its own grid area. */
+      #account { position: sticky; top: 4.5rem; align-self: start; max-height: calc(100vh - 5.5rem); overflow-y: auto; }
+    }
+    #leaders-section { grid-area: leaders; }
+    #games-section { grid-area: games; }
+    #account { grid-area: account; }
+    #table-section { grid-area: table; }
+    section { scroll-margin-top: 4.5rem; }
+
+    /* ----- Point leaders -----
+       On a phone the row scrolls sideways. scroll-snap makes each card stop neatly at the edge. */
+    #leaders { list-style: none; margin: 1.2rem 0 0; padding: 0; display: grid; gap: 0.9rem; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .leader { position: relative; padding: 1.1rem 1rem 1rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+    .leader .headshot { width: 5.5rem; height: 5.5rem; border-radius: 50%; background: var(--surface-2); object-fit: cover; }
+    .leader .rank { position: absolute; top: 0.8rem; right: 1rem; font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: var(--muted); }
+    .leader .player { margin-top: 0.8rem; line-height: 1.15; }
+    .leader .player span { display: block; }
+    .leader .first-name { font-size: 0.85rem; color: var(--muted); }
+    .leader .last-name { font-family: var(--display); font-size: 1.5rem; font-weight: 700; color: var(--text); }
+    .leader .stat { display: flex; align-items: center; justify-content: space-between; margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
+    .leader .stat img { width: 2rem; height: 2rem; }
+    .leader .points { font-family: var(--display); font-size: 1.9rem; font-weight: 800; line-height: 1; }
+    .leader .points small { font-family: var(--body); font-size: 0.75rem; font-weight: 600; color: var(--muted); margin-left: 0.2rem; }
+    @media (max-width: 62rem) {
+      #leaders { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -1.25rem; padding: 0 1.25rem 0.5rem; scroll-padding-inline: 1.25rem; scrollbar-width: none; }
+      .leader { flex: 0 0 11.5rem; scroll-snap-align: start; }
+    }
+
+    /* ----- Games ----- */
+    .rules { font-size: 0.9rem; }
+    #games { margin-top: 1.5rem; }
+    #games details + details { margin-top: 1.5rem; }
+    summary {
+      display: flex; align-items: baseline; gap: 0.6rem;
+      padding: 0.5rem 0; cursor: pointer; list-style: none;
+      font-size: 1.5rem; font-weight: 700; border-bottom: 1px solid var(--line);
+    }
+    summary::-webkit-details-marker { display: none; }
     summary::first-letter { text-transform: uppercase; }
-    summary .count { font-weight: 400; color: var(--muted); }
-    summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
-    #games ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 25rem), 1fr)); column-gap: 2.5rem; }
-    #games li { display: flex; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--line); }
-    .time { width: 3rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .teams { flex: 1; min-width: 0; }
-    .team { display: flex; align-items: center; gap: 0.5rem; padding: 0.15rem 0 0.15rem 0.6rem; border-left: 3px solid transparent; }
-    .team.picked { border-left-color: var(--red); font-weight: 700; }
-    .name { flex: 1; min-width: 0; }
-    .picked .name::after { content: " Tips"; color: var(--red); font-size: 0.85rem; }
+    /* Chevron drawn with two borders, turned when the day is open. */
+    summary::after {
+      content: ""; margin-left: auto; align-self: center;
+      width: 0.5rem; height: 0.5rem; border: solid var(--muted); border-width: 0 2px 2px 0;
+      transform: rotate(-45deg); transition: transform 0.15s;
+    }
+    details[open] > summary::after { transform: rotate(45deg); }
+    summary .count { font-family: var(--body); font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+    @media (prefers-reduced-motion: reduce) { summary::after { transition: none; } }
 
-    /* One puck per result. */
-    .form { display: flex; gap: 0.2rem; }
-    .puck { width: 1.3rem; height: 1.3rem; border-radius: 50%; display: grid; place-items: center; font-size: 0.7rem; font-weight: 700; border: 1.5px solid var(--line); color: var(--muted); }
-    .puck.win { background: var(--win); border-color: var(--win); color: var(--win-text); }
-    .puck.overtime { border-color: var(--win); color: var(--blue); }
+    #games ul {
+      list-style: none; margin: 1rem 0 0; padding: 0;
+      display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    }
+    .game { padding: 1.1rem 1rem 1rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+    /* Home team | time | away team. */
+    .matchup { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; gap: 0.5rem; }
+    .time { align-self: center; font-family: var(--display); font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; padding-bottom: 2.2rem; }
+    .team { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+    .logo { position: relative; }
+    .logo img { width: 3.6rem; height: 3.6rem; }
+    .place { margin-top: 0.4rem; font-size: 0.78rem; color: var(--muted); line-height: 1.2; }
+    .club { font-family: var(--display); font-size: 1.25rem; font-weight: 700; line-height: 1.1; overflow-wrap: anywhere; }
+    /* The statistics tip: a small red tag on the logo, like a goal light. */
+    .tip-badge {
+      position: absolute; top: -0.3rem; right: -1.1rem; padding: 0.05rem 0.4rem; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 700; background: var(--red); color: #fff;
+    }
 
-    .scroll { overflow-x: auto; margin: 0.8rem 0 3rem; background: var(--surface); border-radius: 0.75rem; }
+    /* One puck per result: filled for a win, ring for an overtime loss, faint for a loss. */
+    .form { display: flex; gap: 3px; margin-top: 0.5rem; }
+    .puck {
+      width: 1.05rem; height: 1.05rem; border-radius: 50%;
+      display: grid; place-items: center; font-size: 0.56rem; font-weight: 700; line-height: 1;
+      border: 1.5px solid color-mix(in srgb, var(--muted) 40%, transparent); color: var(--muted);
+    }
+    .puck.win { background: var(--blue); border-color: var(--blue); color: var(--on-accent); }
+    .puck.overtime { border-color: var(--blue); color: var(--blue); }
+
+    /* Your own tip, shown only when logged in. Three joined buttons (1X2), equally wide. */
+    .my-tip { display: none; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
+    .logged-in .my-tip { display: flex; }
+    .my-tip button {
+      flex: 1; font: inherit; font-weight: 700; padding: 0.4rem 0.3rem; margin-right: -0.6rem;
+      border: 0; border-radius: 0; background: var(--surface-2); color: var(--text); cursor: pointer;
+    }
+    .my-tip button:first-of-type { border-radius: 999px 0 0 999px; }
+    .my-tip button + button { box-shadow: inset 1px 0 0 var(--line); }
+    .my-tip button:last-of-type { border-radius: 0 999px 999px 0; margin-right: 0; }
+    .my-tip button:hover { background: color-mix(in srgb, var(--blue) 15%, var(--surface-2)); }
+    .my-tip button[aria-pressed="true"] { background: var(--blue); color: var(--on-accent); }
+    .tip-message { flex-basis: 100%; text-align: center; font-weight: 600; color: var(--text); }
+    .tip-message:empty { display: none; }
+
+    /* ----- Account panel ----- */
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.4rem; }
+    #account h2 { font-size: 1.8rem; }
+    #account form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: end; margin-top: 1rem; }
+    #account label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.82rem; font-weight: 600; color: var(--muted); flex: 1 1 12rem; }
+    #account input {
+      font: inherit; font-weight: 400; padding: 0.6rem 0.8rem;
+      border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--text);
+    }
+    #account input:focus-visible { outline-offset: 0; border-color: var(--blue); }
+    #account button {
+      font: inherit; font-weight: 700; padding: 0.6rem 1.1rem;
+      border: 0; border-radius: 999px; background: var(--blue); color: var(--on-accent); cursor: pointer;
+    }
+    #account button:hover { filter: brightness(1.1); }
+    #account button.secondary { background: transparent; color: var(--blue); box-shadow: inset 0 0 0 1.5px var(--blue); }
+    #account button.link { box-shadow: none; padding-inline: 0.3rem; font-weight: 600; }
+    #account #logout-button { position: absolute; top: 1.4rem; right: 1.4rem; padding: 0.3rem 0.8rem; font-size: 0.82rem; }
+
+    #league-list { list-style: none; margin: 0.4rem 0; padding: 0; display: grid; gap: 0.6rem; }
+    #league-list > li {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.8rem;
+      padding: 0.8rem 0.9rem; border-radius: 12px; background: var(--surface-2); font-size: 0.82rem; color: var(--muted);
+    }
+    #league-list .league-name { flex: 1 1 100%; font-family: var(--display); font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    #league-list .code { font-weight: 700; letter-spacing: 0.12em; color: var(--text); }
+    /* Leaderboard: an ordered list, the leader gets the red line. */
+    .leaderboard { flex-basis: 100%; margin: 0.4rem 0 0; padding: 0; list-style: none; counter-reset: place; }
+    .leaderboard li {
+      counter-increment: place; display: flex; gap: 0.6rem; align-items: baseline;
+      padding: 0.3rem 0; border-top: 1px solid var(--line); color: var(--text); font-size: 0.95rem;
+    }
+    /* counter(): CSS counts the rows itself, so the numbers need no extra HTML. */
+    .leaderboard li::before { content: counter(place); width: 1.1rem; font-family: var(--display); font-weight: 700; color: var(--muted); }
+    .leaderboard li:first-child::before { color: var(--red); }
+    .leaderboard .score { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+
+    /* ----- Standings table ----- */
+    .scroll { overflow-x: auto; margin-top: 1.2rem; padding: 0.4rem 0; }
     table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-    th, td { padding: 0.5rem 0.7rem; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
-    th { color: var(--muted); font-size: 0.85rem; }
-    tbody tr:last-child td { border-bottom: 0; }
+    th, td { padding: 0.55rem 0.7rem; text-align: right; white-space: nowrap; }
+    td { border-top: 1px solid var(--line); }
+    th { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
     th:nth-child(2), td:nth-child(2) { text-align: left; }
-    td:last-child { font-weight: 700; }
+    td:first-child { font-family: var(--display); font-weight: 700; color: var(--muted); }
+    td:nth-child(2) { font-weight: 600; }
+    td:nth-child(2) picture, td:nth-child(2) img { display: inline-block; vertical-align: middle; }
+    td:nth-child(2) img { width: 1.7rem; height: 1.7rem; margin-right: 0.6rem; }
+    td:last-child { font-family: var(--display); font-size: 1.3rem; font-weight: 700; }
+    tbody tr:hover td { background: color-mix(in srgb, var(--blue) 5%, transparent); }
     .short { display: none; }
 
-    /* Account: login form and logged-in row. */
-    #account { margin-top: 1.5rem; padding: 1rem; background: var(--surface); border-radius: 0.75rem; }
-    #account h2 { margin-top: 0; }
-    #account form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin-top: 0.5rem; }
-    #account label { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--muted); flex: 1 1 12rem; }
-    #account input { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 0.4rem; background: var(--ice); color: var(--text); }
-    #account button { font: inherit; padding: 0.45rem 0.9rem; border: 1px solid var(--blue); border-radius: 0.4rem; background: var(--blue); color: var(--win-text); cursor: pointer; }
-    #account button.secondary { background: transparent; color: var(--blue); }
-    #account button:focus-visible, #account input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
-    [hidden] { display: none !important; }
-    #account h3 { margin: 1.2rem 0 0.2rem; font-size: 1.1rem; }
-    #league-list { list-style: none; margin: 0.3rem 0; padding: 0; }
-    #league-list li { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; padding: 0.4rem 0; border-bottom: 1px solid var(--line); }
-    #league-list .league-name { flex: 1; font-weight: 700; }
-    #league-list .code { font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.1em; }
-    .leaderboard { flex-basis: 100%; margin: 0.2rem 0 0; padding-left: 1.6rem; }
-    .leaderboard li { border: 0 !important; padding: 0.1rem 0 !important; }
-    .leaderboard .score { color: var(--muted); font-variant-numeric: tabular-nums; }
+    footer { border-top: 1px solid var(--line); padding: 1.5rem 0 3rem; font-size: 0.82rem; }
 
-    /* Your own tip: shown only when logged in (body gets the class "logged-in"). */
-    .my-tip { display: none; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.35rem; padding-left: 0.6rem; font-size: 0.85rem; color: var(--muted); }
-    .logged-in .my-tip { display: flex; }
-    .my-tip button { font: inherit; font-weight: 700; padding: 0.15rem 0.6rem; border: 1.5px solid var(--blue); border-radius: 1rem; background: transparent; color: var(--blue); cursor: pointer; }
-    .my-tip button[aria-pressed="true"] { background: var(--blue); color: var(--win-text); }
-    .my-tip button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
-
-    /* Mobile: team abbreviation in the table and fewer columns. */
+    /* ----- Phones ----- */
     @media (max-width: 40rem) {
+      .wrap { padding: 0 1rem; }
+      .topbar nav a { padding: 0.3rem 0.5rem; font-size: 0.85rem; }
+      .hero { margin-top: 0.75rem; min-height: 30rem; }
+      .hero-image { object-position: 72% 20%; }
+      .hero::after { background: linear-gradient(0deg, rgba(5, 10, 18, 0.95) 0%, rgba(5, 10, 18, 0.6) 45%, rgba(5, 10, 18, 0) 75%); }
+      main { padding-top: 2rem; gap: 2.5rem; }
+      #leaders { margin-inline: -1rem; padding-inline: 1rem; scroll-padding-inline: 1rem; }
+      h2 { font-size: 1.9rem; }
       .long { display: none; }
       .short { display: inline; }
       th:nth-child(8), td:nth-child(8) { display: none; }
-      th, td { padding: 0.5rem 0.4rem; }
-      header { padding-top: 1.2rem; }
-      .rink { height: 4rem; border-radius: 2rem; }
-      #games li { gap: 0.4rem; }
+      th, td { padding: 0.5rem 0.35rem; }
+      td:nth-child(2) img { width: 1.4rem; height: 1.4rem; margin-right: 0.4rem; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Hockeytips</h1>
-    <svg class="rink" viewBox="0 0 800 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <g fill="none" stroke-width="4">
-        <path d="M290 0V100M510 0V100" stroke="var(--blue)"/>
-        <path d="M400 0V100" stroke="var(--red)"/>
-        <circle cx="400" cy="50" r="30" stroke="var(--blue)"/>
-      </g>
-      <circle cx="400" cy="50" r="6" fill="var(--text)"/>
-    </svg>
+  <header class="topbar">
+    <div class="wrap">
+      <h1><a href="#">Hockeytips</a></h1>
+      <nav aria-label="Genvägar">
+        <a href="#games-section">Matcher</a>
+        <a href="#table-section">Tabellen</a>
+        <a href="#account">Konto</a>
+      </nav>
+    </div>
   </header>
 
-  <main>
-  <section id="account">
+  <div class="wrap">
+    <!-- Filled from data/leaders.json. Without it, the hero shows only the text below. -->
+    <section class="hero" aria-labelledby="hero-name">
+      <img class="hero-image" id="hero-image" alt="" hidden>
+      <div class="hero-text">
+        <p class="hero-label" id="hero-label">NHL-matcher, form och tabell</p>
+        <h2 class="hero-name" id="hero-name">Tips för skojs skull</h2>
+        <p class="hero-stat" id="hero-stat" hidden></p>
+        <div class="hero-actions">
+          <a class="button" href="#games-section">Se matcherna</a>
+          <a class="button ghost" href="#table-section">Tabellen</a>
+        </div>
+      </div>
+      <p class="hero-credit" id="hero-credit" hidden>Foto: NHL</p>
+    </section>
+  </div>
+
+  <main class="wrap">
+  <section id="leaders-section" hidden>
+    <h2>Poängligan</h2>
+    <p>Flest poäng (mål plus assist) den här säsongen.</p>
+    <ol id="leaders"></ol>
+  </section>
+
+  <section id="account" class="panel">
     <h2>Konto</h2>
     <p id="account-status">Kontrollerar inloggning …</p>
 
@@ -119,7 +321,7 @@
       <label>Lösenord <input id="password" type="password" autocomplete="current-password" minlength="6" required></label>
       <button type="submit" id="login-button">Logga in</button>
       <button type="button" id="signup-button" class="secondary">Skapa konto</button>
-      <button type="button" id="forgot-button" class="secondary">Glömt lösenord?</button>
+      <button type="button" id="forgot-button" class="secondary link">Glömt lösenord?</button>
     </form>
 
     <!-- Shown after clicking the reset link in the email. -->
@@ -152,33 +354,44 @@
     </div>
   </section>
 
-  <h2>Kommande matcher</h2>
-  <p id="games-status">Hämtar matcherna …</p>
-  <p>Vi tippar på laget med flest poäng på sina 5 senaste matcher: vinst (V) ger 2, förlust efter förlängning eller straffar (Ö) ger 1 och förlust (F) ger 0.
-     Vid lika avgör tabellen, sedan hemmaplan. Den senaste matchen står längst till höger. Bara för skojs skull.</p>
-  <div id="games"></div>
+  <section id="games-section">
+    <h2>Kommande matcher</h2>
+    <p id="games-status">Hämtar matcherna …</p>
+    <p class="rules">Vi tippar på laget med flest poäng på sina 5 senaste matcher: vinst (V) ger 2, förlust efter förlängning eller straffar (Ö) ger 1 och förlust (F) ger 0.
+       Vid lika avgör tabellen, sedan hemmaplan. Den senaste matchen står längst till höger.</p>
+    <div id="games"></div>
+  </section>
 
-  <h2>Tabellen</h2>
-  <p id="table-status">Hämtar tabellen …</p>
-  <div class="scroll">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Lag</th>
-          <th title="Spelade matcher">M</th>
-          <th title="Vinster">V</th>
-          <th title="Förluster">F</th>
-          <th title="Förluster efter förlängning eller straffar">ÖF</th>
-          <th title="Målskillnad">+/−</th>
-          <th title="Vinster, förluster och förlängningsförluster senaste 10">Senaste 10</th>
-          <th title="Poäng">P</th>
-        </tr>
-      </thead>
-      <tbody id="standings"></tbody>
-    </table>
-  </div>
+  <section id="table-section">
+    <h2>Tabellen</h2>
+    <p id="table-status">Hämtar tabellen …</p>
+    <div class="scroll panel">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Lag</th>
+            <th title="Spelade matcher">M</th>
+            <th title="Vinster">V</th>
+            <th title="Förluster">F</th>
+            <th title="Förluster efter förlängning eller straffar">ÖF</th>
+            <th title="Målskillnad">+/−</th>
+            <th title="Vinster, förluster och förlängningsförluster senaste 10">Senaste 10</th>
+            <th title="Poäng">P</th>
+          </tr>
+        </thead>
+        <tbody id="standings"></tbody>
+      </table>
+    </div>
+  </section>
   </main>
+
+  <footer>
+    <div class="wrap">
+      <p>Bara för skojs skull, inga riktiga pengar. Statistik, lagloggor och spelarbilder kommer från NHL:s öppna API och visas direkt från NHL:s servrar.
+         Logotyperna och bilderna tillhör NHL och lagen. Hockeytips har ingen koppling till NHL.</p>
+    </div>
+  </footer>
 
   <!-- supabase-js from a CDN, locked to one version. It exposes a global "supabase" object. -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
@@ -240,21 +453,23 @@
 
           const clock = start.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
           const tip = pickTip(game, form, pointShares);
-          const teams = createElement("div", "teams", "");
-          for (const team of [game.homeTeam, game.awayTeam]) {
-            teams.append(createTeamRow(team, form, team === tip));
-          }
-          teams.append(createMyTip(game));
+          // Home team on the left, the time in the middle, away team on the right.
+          const matchup = createElement("div", "matchup", "");
+          matchup.append(
+            createTeamBlock(game.homeTeam, form, game.homeTeam === tip),
+            createElement("span", "time", clock),
+            createTeamBlock(game.awayTeam, form, game.awayTeam === tip),
+          );
 
-          const row = document.createElement("li");
-          row.append(createElement("span", "time", clock), teams);
+          const row = createElement("li", "game", "");
+          row.append(matchup, createMyTip(game));
           list.append(row);
           count.textContent = "(" + list.children.length + ")";
         }
 
         updateTipButtons();
         status.textContent = games.length > 0
-          ? games.length + " matcher. Hemmalaget står först, tiderna är i din tidszon."
+          ? games.length + " matcher. Hemmalaget står till vänster, tiderna är i din tidszon."
           : "Inga kommande matcher i den sparade filen.";
       } catch (error) {
         console.error(error);
@@ -274,7 +489,6 @@
       return element;
     }
 
-    // A row with the team's name and one puck per result.
     // ----- Your own tips (saved in Supabase) -----
     // Map: game id -> team abbreviation you picked. Filled from the tips table after login.
     const myTips = new Map();
@@ -342,15 +556,42 @@
       message.textContent = "Sparat";
     }
 
-    function createTeamRow(team, form, picked) {
-      const row = createElement("div", picked ? "team picked" : "team", "");
+    // The team's logo, name and one puck per result. "picked" adds the red Tips tag.
+    function createTeamBlock(team, form, picked) {
+      const block = createElement("div", "team", "");
+      const logo = createElement("span", "logo", "");
+      logo.append(createLogo(team.abbrev));
+      if (picked) logo.append(createElement("span", "tip-badge", "Tips"));
+
       const pucks = createElement("span", "form", "");
       const results = form[team.abbrev] ?? [];
       pucks.setAttribute("role", "img");
       pucks.setAttribute("aria-label", "Form: " + results.map(r => RESULTS[r].letter).join(" "));
       for (const r of results) pucks.append(createElement("span", "puck " + RESULTS[r].style, RESULTS[r].letter));
-      row.append(createElement("span", "name", teamName(team)), pucks);
-      return row;
+
+      block.append(
+        logo,
+        createElement("span", "place", team.placeName.default),
+        createElement("span", "club", team.commonName.default),
+        pucks,
+      );
+      return block;
+    }
+
+    // The team logo, shown straight from the NHL's servers. Each team has a light and a dark version.
+    // <picture> lets the browser pick: the dark version when the visitor uses dark mode.
+    function createLogo(abbrev) {
+      const base = "https://assets.nhle.com/logos/nhl/svg/" + abbrev;
+      const picture = document.createElement("picture");
+      const dark = document.createElement("source");
+      dark.media = "(prefers-color-scheme: dark)";
+      dark.srcset = base + "_dark.svg";
+      const img = document.createElement("img");
+      img.src = base + "_light.svg";
+      img.alt = ""; // The team name is written next to the logo, so the image is decoration.
+      img.loading = "lazy";
+      picture.append(dark, img);
+      return picture;
     }
 
     function pickTip(game, form, pointShares) {
@@ -392,6 +633,7 @@
 
           // Show the abbreviation on mobile and the full name on larger screens (controlled in CSS).
           row.cells[1].replaceChildren(
+            createLogo(team.teamAbbrev.default),
             createElement("span", "long", team.teamName.default),
             createElement("span", "short", team.teamAbbrev.default),
           );
@@ -631,6 +873,62 @@
       }
     });
 
+    // ----- Point leaders and the big photo at the top -----
+    async function showLeaders() {
+      try {
+        const [leaders, standings] = await Promise.all([fetchJson("data/leaders.json"), fetchJson("data/standings.json")]);
+        const players = leaders.points;
+        if (players.length === 0) return;
+        const teamNames = new Map(standings.standings.map(t => [t.teamAbbrev.default, t.teamName.default]));
+
+        // Hero: the leader's name, points and an action photo, if the API had one.
+        const top = players[0];
+        document.getElementById("hero-name").replaceChildren(
+          createElement("span", "first", top.firstName.default),
+          createElement("span", "", top.lastName.default),
+        );
+        document.getElementById("hero-label").textContent = "Leder poängligan";
+        const stat = document.getElementById("hero-stat");
+        stat.append(createLogo(top.teamAbbrev), createElement("strong", "", top.value));
+        stat.append(" poäng för " + (teamNames.get(top.teamAbbrev) ?? top.teamAbbrev));
+        stat.hidden = false;
+        if (leaders.heroImage) {
+          const image = document.getElementById("hero-image");
+          image.src = leaders.heroImage;
+          image.hidden = false;
+          document.getElementById("hero-credit").hidden = false;
+        }
+
+        // A card for each of the top 5.
+        const list = document.getElementById("leaders");
+        players.forEach((player, index) => {
+          const photo = document.createElement("img");
+          photo.className = "headshot";
+          photo.src = player.headshot;
+          photo.alt = "";
+          photo.loading = "lazy";
+          const name = createElement("p", "player", "");
+          name.append(
+            createElement("span", "first-name", player.firstName.default),
+            createElement("span", "last-name", player.lastName.default),
+          );
+          const points = createElement("span", "points", player.value);
+          points.append(createElement("small", "", "p"));
+          const statRow = createElement("div", "stat", "");
+          statRow.append(createLogo(player.teamAbbrev), points);
+          statRow.title = teamNames.get(player.teamAbbrev) ?? player.teamAbbrev;
+
+          const card = createElement("li", "leader", "");
+          card.append(createElement("span", "rank", index + 1), photo, name, statRow);
+          list.append(card);
+        });
+        document.getElementById("leaders-section").hidden = false;
+      } catch (error) {
+        console.error(error); // The page works without it: the hero keeps its text.
+      }
+    }
+
+    showLeaders();
     showGames();
     showTable();
   </script>
