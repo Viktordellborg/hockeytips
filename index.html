@@ -68,6 +68,13 @@
     #account button:focus-visible, #account input:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
     [hidden] { display: none !important; }
 
+    /* Your own tip: shown only when logged in (body gets the class "logged-in"). */
+    .my-tip { display: none; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.35rem; padding-left: 0.6rem; font-size: 0.85rem; color: var(--muted); }
+    .logged-in .my-tip { display: flex; }
+    .my-tip button { font: inherit; font-weight: 700; padding: 0.15rem 0.6rem; border: 1.5px solid var(--blue); border-radius: 1rem; background: transparent; color: var(--blue); cursor: pointer; }
+    .my-tip button[aria-pressed="true"] { background: var(--blue); color: var(--win-text); }
+    .my-tip button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
     /* Mobile: team abbreviation in the table and fewer columns. */
     @media (max-width: 40rem) {
       .long { display: none; }
@@ -211,6 +218,7 @@
           for (const team of [game.homeTeam, game.awayTeam]) {
             teams.append(createTeamRow(team, form, team === tip));
           }
+          teams.append(createMyTip(game));
 
           const row = document.createElement("li");
           row.append(createElement("span", "time", clock), teams);
@@ -218,6 +226,7 @@
           count.textContent = "(" + list.children.length + ")";
         }
 
+        updateTipButtons();
         status.textContent = games.length > 0
           ? games.length + " matcher. Hemmalaget står först, tiderna är i din tidszon."
           : "Inga kommande matcher i den sparade filen.";
@@ -240,6 +249,66 @@
     }
 
     // A row with the team's name and one puck per result.
+    // ----- Your own tips (saved in Supabase) -----
+    // Map: game id -> team abbreviation you picked. Filled from the tips table after login.
+    const myTips = new Map();
+    let currentUserId = null; // Set when someone logs in.
+
+    // "Ditt tips: [BOS] [WPG]" under a game. One button per team.
+    function createMyTip(game) {
+      const box = createElement("div", "my-tip", "Ditt tips:");
+      for (const team of [game.homeTeam, game.awayTeam]) {
+        const button = createElement("button", "", team.abbrev);
+        button.type = "button";
+        button.dataset.game = game.id;       // data-game="..." in the HTML, read below.
+        button.dataset.team = team.abbrev;
+        button.setAttribute("aria-label", "Tippa på " + teamName(team));
+        button.addEventListener("click", () => saveTip(game, team.abbrev, box));
+        box.append(button);
+      }
+      box.append(createElement("span", "tip-message", ""));
+      return box;
+    }
+
+    // aria-pressed marks the chosen button. Screen readers read it, and the CSS colors it.
+    function updateTipButtons() {
+      for (const button of document.querySelectorAll(".my-tip button")) {
+        const picked = myTips.get(Number(button.dataset.game)) === button.dataset.team;
+        button.setAttribute("aria-pressed", picked);
+      }
+    }
+
+    async function loadMyTips() {
+      myTips.clear();
+      // RLS makes sure this only returns your own tips.
+      const { data, error } = await db.from("tips").select("game_id, picked_team");
+      if (error) {
+        console.error(error);
+      } else {
+        for (const tip of data) myTips.set(tip.game_id, tip.picked_team);
+      }
+      updateTipButtons();
+    }
+
+    async function saveTip(game, team, box) {
+      const message = box.querySelector(".tip-message");
+      // The only start-time check. It is in the page, not in the database (our choice for now).
+      if (new Date(game.startTimeUTC) <= new Date()) {
+        message.textContent = "Matchen har startat.";
+        return;
+      }
+      // upsert: insert a new row, or update the existing one for the same user and game.
+      const { error } = await db.from("tips").upsert({ user_id: currentUserId, game_id: game.id, picked_team: team });
+      if (error) {
+        console.error(error);
+        message.textContent = "Kunde inte spara.";
+        return;
+      }
+      myTips.set(game.id, team);
+      updateTipButtons();
+      message.textContent = "Sparat";
+    }
+
     function createTeamRow(team, form, picked) {
       const row = createElement("div", picked ? "team picked" : "team", "");
       const pucks = createElement("span", "form", "");
@@ -373,6 +442,15 @@
     // Runs on page load and every time the login state changes (login, logout, reset link).
     db.auth.onAuthStateChange((event, session) => {
       showAccount(session);
+      document.body.classList.toggle("logged-in", session !== null);
+      currentUserId = session ? session.user.id : null;
+      // setTimeout: Supabase must not be called directly inside this callback, so wait one tick.
+      if (session) {
+        setTimeout(loadMyTips, 0);
+      } else {
+        myTips.clear();
+        updateTipButtons();
+      }
       if (event === "PASSWORD_RECOVERY") {
         loggedIn.hidden = true;
         newPasswordForm.hidden = false;
