@@ -12,7 +12,7 @@
    "headshot": "https://assets.nhle.com/mugs/nhl/20262027/EDM/8478402.png",
    "teamAbbrev": "EDM",
    "position": "C",
-   "value": 59
+   "value": 60
   },
   {
    "id": 8478864,
@@ -40,7 +40,7 @@
    "headshot": "https://assets.nhle.com/mugs/nhl/20262027/EDM/8477934.png",
    "teamAbbrev": "EDM",
    "position": "C",
-   "value": 47
+   "value": 48
   },
   {
    "id": 8480803,
@@ -54,7 +54,7 @@
    "headshot": "https://assets.nhle.com/mugs/nhl/20262027/EDM/8480803.png",
    "teamAbbrev": "EDM",
    "position": "D",
-   "value": 41
+   "value": 42
   },
   {
    "id": 8478398,
@@ -68,7 +68,7 @@
    "headshot": "https://assets.nhle.com/mugs/nhl/20262027/WPG/8478398.png",
    "teamAbbrev": "WPG",
    "position": "L",
-   "value": 35
+   "value": 38
   }
  ],
  "heroImage": "https://assets.nhle.com/mugs/actionshots/1296x729/8478402.jpg"
